@@ -68,7 +68,8 @@ export default function RegisterPage() {
       
       console.log('Création tenant avec:', tenantPayload);
       
-      const tenantResponse = await fetch('https://backend-de-restaurant-saas-production.up.railway.app/api/v1/tenants', {
+      const API = process.env.NEXT_PUBLIC_API_URL || '';
+      const tenantResponse = await fetch(`${API}/tenants`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +112,7 @@ export default function RegisterPage() {
       
       console.log('Création utilisateur avec:', userPayload);
       
-      const userResponse = await fetch('https://backend-de-restaurant-saas-production.up.railway.app/api/v1/auth/register', {
+      const userResponse = await fetch(`${API}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
