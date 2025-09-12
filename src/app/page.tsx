@@ -64,15 +64,7 @@ export default function LandingPage() {
                   S'inscrire
                 </Button>
               </Link>
-              {/* BOUTON DÉBOGAGE - À SUPPRIMER EN PRODUCTION */}
-              <Button 
-                onClick={clearAuthDebug}
-                variant="ghost" 
-                className="text-red-400 hover:bg-red-500/10 text-xs"
-                title="DÉBOGAGE: Vider l'authentification"
-              >
-                🧹 Debug
-              </Button>
+              {/* Bouton debug retiré en production */}
             </div>
 
             {/* Mobile menu button */}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -74,7 +74,7 @@ const STATUS_META: Record<OrderStatus, { label: string; color: string }> = {
 	annulee: { label: "Annulée", color: "bg-red-100 text-red-700" },
 };
 
-export default function OrdersPage() {
+function OrdersPageInner() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
@@ -476,6 +476,14 @@ export default function OrdersPage() {
 			)}
 		</div>
 	);
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-gray-500">Chargement...</div>}>
+      <OrdersPageInner />
+    </Suspense>
+  );
 }
 
 
