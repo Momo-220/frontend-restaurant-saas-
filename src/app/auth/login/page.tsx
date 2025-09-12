@@ -32,7 +32,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/v1/auth/login', {
+      const API = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${API}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -174,9 +175,7 @@ export default function LoginPage() {
                   Créer un compte
                 </Link>
               </p>
-              <Link href="/auth/forgot-password" className="text-sm text-gray-500 hover:text-gray-700 mt-2 block">
-                Mot de passe oublié ?
-              </Link>
+              {/* Lien désactivé tant que la page n'existe pas */}
             </div>
           </CardContent>
         </Card>
