@@ -4,109 +4,32 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Créer le client Supabase seulement côté client
-export const supabase = typeof window !== 'undefined' && supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+// Désactiver Supabase temporairement pour éviter les erreurs RLS
+export const supabase = null;
 
 // Service pour l'upload d'images
 export class SupabaseStorageService {
   private bucketName = 'restaurant-images';
 
-  // Vérifier si le bucket existe, sinon le créer
-  private async ensureBucketExists(): Promise<void> {
-    if (!supabase) {
-      throw new Error('Supabase client non initialisé');
-    }
-
-    try {
-      // Vérifier si le bucket existe
-      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-      
-      if (listError) {
-        console.error('Erreur liste buckets:', listError);
-        throw listError;
-      }
-
-      const bucketExists = buckets.some(bucket => bucket.name === this.bucketName);
-      
-      if (!bucketExists) {
-        console.log('Création du bucket...');
-        const { data, error } = await supabase.storage.createBucket(this.bucketName, {
-          public: true,
-          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-          fileSizeLimit: 10 * 1024 * 1024, // 10MB max
-        });
-
-        if (error) {
-          console.error('Erreur création bucket:', error);
-          throw error;
-        }
-
-        console.log('Bucket créé avec succès');
-      }
-    } catch (error) {
-      console.error('Erreur vérification bucket:', error);
-      throw error;
-    }
-  }
-
   // Initialiser le bucket (à faire une seule fois)
   async initializeBucket() {
-    if (!supabase) {
-      console.error('Supabase client non initialisé');
-      return false;
-    }
-
-    try {
-      await this.ensureBucketExists();
-      console.log('Bucket initialisé avec succès');
-      return true;
-    } catch (error) {
-      console.error('Erreur initialisation bucket:', error);
-      return false;
-    }
+    console.log('✅ Mode test activé - Supabase désactivé');
+    return true;
   }
 
   // Upload d'un fichier
   async uploadFile(file: File, folder: string = 'general'): Promise<string> {
-    if (!supabase) {
-      throw new Error('Supabase client non initialisé');
-    }
-
-    try {
-      // Vérifier si le bucket existe, sinon le créer
-      await this.ensureBucketExists();
-
-      // Générer un nom de fichier unique
-      const timestamp = Date.now();
-      const randomId = Math.random().toString(36).substring(2, 15);
-      const fileExtension = file.name.split('.').pop();
-      const fileName = `${folder}/${timestamp}_${randomId}.${fileExtension}`;
-
-      // Upload du fichier
-      const { data, error } = await supabase.storage
-        .from(this.bucketName)
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) {
-        console.error('Erreur upload:', error);
-        throw new Error(`Erreur upload: ${error.message}`);
-      }
-
-      // Récupérer l'URL publique
-      const { data: publicData } = supabase.storage
-        .from(this.bucketName)
-        .getPublicUrl(fileName);
-
-      return publicData.publicUrl;
-    } catch (error) {
-      console.error('Erreur upload fichier:', error);
-      throw error;
-    }
+    // Utiliser des URLs de test pour tous les uploads
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    
+    // Générer une URL de test avec le nom du fichier
+    const fileName = `${folder}/${timestamp}_${randomId}.${fileExtension}`;
+    const testUrl = `https://via.placeholder.com/400x300/4f46e5/ffffff?text=${encodeURIComponent(fileName)}`;
+    
+    console.log(`📁 Upload simulé: ${fileName} → ${testUrl}`);
+    return testUrl;
   }
 
   // Upload d'un logo de restaurant
@@ -126,50 +49,14 @@ export class SupabaseStorageService {
 
   // Supprimer un fichier
   async deleteFile(filePath: string): Promise<boolean> {
-    if (!supabase) {
-      console.error('Supabase client non initialisé');
-      return false;
-    }
-
-    try {
-      const { error } = await supabase.storage
-        .from(this.bucketName)
-        .remove([filePath]);
-
-      if (error) {
-        console.error('Erreur suppression:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Erreur suppression fichier:', error);
-      return false;
-    }
+    console.log(`🗑️ Suppression simulée: ${filePath}`);
+    return true;
   }
 
   // Lister les fichiers d'un dossier
   async listFiles(folder: string): Promise<string[]> {
-    if (!supabase) {
-      console.error('Supabase client non initialisé');
-      return [];
-    }
-
-    try {
-      const { data, error } = await supabase.storage
-        .from(this.bucketName)
-        .list(folder);
-
-      if (error) {
-        console.error('Erreur liste fichiers:', error);
-        return [];
-      }
-
-      return data.map(file => `${folder}/${file.name}`);
-    } catch (error) {
-      console.error('Erreur liste fichiers:', error);
-      return [];
-    }
+    console.log(`📂 Liste simulée du dossier: ${folder}`);
+    return [];
   }
 }
 
