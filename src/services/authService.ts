@@ -124,7 +124,7 @@ class AuthService {
     // Tente de récupérer le profil depuis l'API si token présent
     const token = this.getToken();
     if (token) {
-      const res = await this.authenticatedFetch(`${this.baseURL}/auth/profile`, { method: 'GET' });
+      const res = await this.authenticatedFetch(`${this.baseURL}/api/v1/auth/profile`, { method: 'GET' });
       if (res.ok) {
         const data = await res.json();
         this.user = data as User;
@@ -139,7 +139,7 @@ class AuthService {
 
   // Connexion
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const res = await fetch(`${this.baseURL}/auth/login`, {
+    const res = await fetch(`${this.baseURL}/api/v1/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
@@ -165,7 +165,7 @@ class AuthService {
 
   // Inscription
   async register(data: RegisterData): Promise<void> {
-    const res = await fetch(`${this.baseURL}/auth/register`, {
+    const res = await fetch(`${this.baseURL}/api/v1/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -194,7 +194,7 @@ class AuthService {
     if (typeof data.banner_url !== 'undefined') allowed.banner_url = data.banner_url;
     if (typeof data.payment_info !== 'undefined') allowed.payment_info = data.payment_info;
 
-    const res = await this.authenticatedFetch(`${this.baseURL}/tenants/${this.user.tenant.id}`, {
+    const res = await this.authenticatedFetch(`${this.baseURL}/api/v1/tenants/${this.user.tenant.id}`, {
       method: 'PATCH',
       body: JSON.stringify(allowed),
     });
