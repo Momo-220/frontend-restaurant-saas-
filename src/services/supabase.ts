@@ -4,8 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Créer le client Supabase
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Créer le client Supabase seulement côté client
+export const supabase = typeof window !== 'undefined' && supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 // Service pour l'upload d'images
 export class SupabaseStorageService {
@@ -13,6 +15,11 @@ export class SupabaseStorageService {
 
   // Initialiser le bucket (à faire une seule fois)
   async initializeBucket() {
+    if (!supabase) {
+      console.error('Supabase client non initialisé');
+      return false;
+    }
+
     try {
       const { data, error } = await supabase.storage.createBucket(this.bucketName, {
         public: true,
@@ -35,6 +42,10 @@ export class SupabaseStorageService {
 
   // Upload d'un fichier
   async uploadFile(file: File, folder: string = 'general'): Promise<string> {
+    if (!supabase) {
+      throw new Error('Supabase client non initialisé');
+    }
+
     try {
       // Générer un nom de fichier unique
       const timestamp = Date.now();
@@ -84,6 +95,11 @@ export class SupabaseStorageService {
 
   // Supprimer un fichier
   async deleteFile(filePath: string): Promise<boolean> {
+    if (!supabase) {
+      console.error('Supabase client non initialisé');
+      return false;
+    }
+
     try {
       const { error } = await supabase.storage
         .from(this.bucketName)
@@ -103,6 +119,11 @@ export class SupabaseStorageService {
 
   // Lister les fichiers d'un dossier
   async listFiles(folder: string): Promise<string[]> {
+    if (!supabase) {
+      console.error('Supabase client non initialisé');
+      return [];
+    }
+
     try {
       const { data, error } = await supabase.storage
         .from(this.bucketName)
