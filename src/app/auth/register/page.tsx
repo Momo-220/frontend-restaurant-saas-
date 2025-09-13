@@ -77,7 +77,7 @@ export default function RegisterPage() {
       // Les URLs sont déjà uploadées via le composant FileUpload
       // On utilise les URLs récupérées de Supabase
 
-      // ÉTAPE 1: Créer le tenant (restaurant) avec TOUTES les informations
+      // ÉTAPE 1: Créer le tenant (restaurant) avec les informations de base
       const tenantPayload = {
         name: formData.restaurantName,
         slug: formData.restaurantSlug,
@@ -88,7 +88,6 @@ export default function RegisterPage() {
         website: formData.restaurantWebsite,
         logo_url: logoUrl || undefined,
         banner_url: bannerUrl || undefined,
-        // Stocker les informations de paiement dans des champs personnalisés
         payment_info: {
           myNita: {
             number: formData.myNitaNumber,
