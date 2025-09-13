@@ -108,7 +108,7 @@ export default function RegisterPage() {
       console.log('Création tenant avec:', tenantPayload);
       
       const API = process.env.NEXT_PUBLIC_API_URL || '';
-      const tenantResponse = await fetch(`${API}/tenants`, {
+      const tenantResponse = await fetch(`${API}/api/v1/tenants`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
