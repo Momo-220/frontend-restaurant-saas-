@@ -13,6 +13,44 @@ export const supabase = typeof window !== 'undefined' && supabaseUrl && supabase
 export class SupabaseStorageService {
   private bucketName = 'restaurant-images';
 
+  // Vérifier si le bucket existe, sinon le créer
+  private async ensureBucketExists(): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase client non initialisé');
+    }
+
+    try {
+      // Vérifier si le bucket existe
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error('Erreur liste buckets:', listError);
+        throw listError;
+      }
+
+      const bucketExists = buckets.some(bucket => bucket.name === this.bucketName);
+      
+      if (!bucketExists) {
+        console.log('Création du bucket...');
+        const { data, error } = await supabase.storage.createBucket(this.bucketName, {
+          public: true,
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+          fileSizeLimit: 10 * 1024 * 1024, // 10MB max
+        });
+
+        if (error) {
+          console.error('Erreur création bucket:', error);
+          throw error;
+        }
+
+        console.log('Bucket créé avec succès');
+      }
+    } catch (error) {
+      console.error('Erreur vérification bucket:', error);
+      throw error;
+    }
+  }
+
   // Initialiser le bucket (à faire une seule fois)
   async initializeBucket() {
     if (!supabase) {
@@ -21,17 +59,7 @@ export class SupabaseStorageService {
     }
 
     try {
-      const { data, error } = await supabase.storage.createBucket(this.bucketName, {
-        public: true,
-        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-        fileSizeLimit: 10 * 1024 * 1024, // 10MB max
-      });
-
-      if (error && error.message !== 'Bucket already exists') {
-        console.error('Erreur création bucket:', error);
-        throw error;
-      }
-
+      await this.ensureBucketExists();
       console.log('Bucket initialisé avec succès');
       return true;
     } catch (error) {
@@ -47,6 +75,9 @@ export class SupabaseStorageService {
     }
 
     try {
+      // Vérifier si le bucket existe, sinon le créer
+      await this.ensureBucketExists();
+
       // Générer un nom de fichier unique
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 15);

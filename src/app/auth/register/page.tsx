@@ -405,7 +405,7 @@ export default function RegisterPage() {
                         URL de votre menu * <span className="text-gray-500">(généré automatiquement)</span>
                       </Label>
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500">nomo.app/r/</span>
+                        <span className="text-sm text-gray-500">nomo-app.vercel.app/r/</span>
                         <Input
                           id="restaurantSlug"
                           name="restaurantSlug"

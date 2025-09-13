@@ -103,7 +103,7 @@ export default function ProfilePage() {
       const QRCode = await import('qrcode');
 
       // URL du menu du restaurant
-      const menuUrl = `https://nomo.app/r/${restaurantData.slug}`;
+      const menuUrl = `https://nomo-app.vercel.app/r/${restaurantData.slug}`;
       
       // Options pour le QR code
       const options = {
@@ -343,7 +343,7 @@ export default function ProfilePage() {
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Slug URL</label>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500">nomo.app/r/</span>
+                  <span className="text-gray-500">nomo-app.vercel.app/r/</span>
                   <input
                     type="text"
                     value={restaurantData.slug}
@@ -473,7 +473,7 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-2 justify-center">
                     <LinkIcon className="h-4 w-4 text-blue-600" />
                     <code className="text-blue-600 font-mono">
-                      https://nomo.app/r/{restaurantData.slug}
+                      https://nomo-app.vercel.app/r/{restaurantData.slug}
                     </code>
                   </div>
                 </div>

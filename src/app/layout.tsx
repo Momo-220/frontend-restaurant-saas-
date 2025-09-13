@@ -26,11 +26,11 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('http://localhost:3000'),
+  metadataBase: new URL('https://nomo-app.vercel.app'),
   openGraph: {
     title: "NOMO - Restaurant SaaS Platform",
     description: "Révolutionnez votre restaurant avec notre plateforme SaaS complète",
-    url: "http://localhost:3000",
+    url: "https://nomo-app.vercel.app",
     siteName: "NOMO",
     locale: "fr_FR",
     type: "website",
