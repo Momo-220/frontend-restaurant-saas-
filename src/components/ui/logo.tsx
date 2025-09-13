@@ -2,29 +2,105 @@ import React from 'react';
 
 interface LogoProps {
   className?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  showIcon?: boolean;
+  variant?: 'default' | 'white' | 'gradient';
 }
 
-export function Logo({ className = "" }: LogoProps) {
+export function Logo({ 
+  className = '', 
+  size = 'md', 
+  showIcon = false, 
+  variant = 'default' 
+}: LogoProps) {
+  const sizeClasses = {
+    sm: 'text-lg',
+    md: 'text-2xl',
+    lg: 'text-3xl',
+    xl: 'text-4xl'
+  };
+
+  const iconSizes = {
+    sm: 'w-6 h-6',
+    md: 'w-10 h-10',
+    lg: 'w-12 h-12',
+    xl: 'w-16 h-16'
+  };
+
+  const textSizes = {
+    sm: 'text-sm',
+    md: 'text-lg',
+    lg: 'text-xl',
+    xl: 'text-2xl'
+  };
+
+  const getVariantClasses = () => {
+    switch (variant) {
+      case 'white':
+        return 'text-white';
+      case 'gradient':
+        return 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600';
+      default:
+        return 'text-gray-900';
+    }
+  };
+
+  const getIconVariantClasses = () => {
+    switch (variant) {
+      case 'white':
+        return 'bg-white text-gray-900';
+      case 'gradient':
+        return 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white';
+      default:
+        return 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white';
+    }
+  };
+
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-        <span className="text-white font-bold text-lg">🍽️</span>
-      </div>
-      <div>
-        <span className="text-2xl font-black text-white">NOMO</span>
-        <p className="text-xs text-white/80 font-medium -mt-1">Restaurant SaaS</p>
-      </div>
+    <div className={`flex items-center space-x-3 ${className}`}>
+      {showIcon && (
+        <div className={`${iconSizes[size]} ${getIconVariantClasses()} rounded-lg flex items-center justify-center`}>
+          <span 
+            className={`${textSizes[size]} font-light`} 
+            style={{ fontFamily: 'serif', fontWeight: 300 }}
+          >
+            N
+          </span>
+        </div>
+      )}
+      <span 
+        className={`${sizeClasses[size]} font-light tracking-wide ${getVariantClasses()}`}
+        style={{ fontFamily: 'serif', fontWeight: 300, letterSpacing: '0.1em' }}
+      >
+        NOMO
+      </span>
     </div>
   );
 }
 
-export function LogoFooter({ className = "" }: LogoProps) {
+export function LogoIcon({ className = '', size = 'md' }: { className?: string; size?: 'sm' | 'md' | 'lg' | 'xl' }) {
+  const iconSizes = {
+    sm: 'w-6 h-6',
+    md: 'w-10 h-10',
+    lg: 'w-12 h-12',
+    xl: 'w-16 h-16'
+  };
+
+  const textSizes = {
+    sm: 'text-sm',
+    md: 'text-lg',
+    lg: 'text-xl',
+    xl: 'text-2xl'
+  };
+
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-        <span className="text-white font-bold text-sm">🍽️</span>
-      </div>
-      <span className="text-xl font-black text-white">NOMO</span>
+    <div className={`${iconSizes[size]} bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center ${className}`}>
+      <span 
+        className={`${textSizes[size]} font-light text-white`} 
+        style={{ fontFamily: 'serif', fontWeight: 300 }}
+      >
+        N
+      </span>
     </div>
   );
 }

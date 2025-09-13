@@ -5,6 +5,7 @@ import { DashboardGuard } from "@/components/auth/AuthGuard";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useAuth } from "@/services/authService";
+import { Logo } from "@/components/ui/logo";
 
 // Composant Sidebar ultra-moderne pour un restaurant utilisateur de NOMO
 function RestaurantSidebar() {
@@ -19,13 +20,15 @@ function RestaurantSidebar() {
       {/* Header de la sidebar */}
       <div className="flex h-20 items-center justify-between border-b border-gray-200/50 px-4 bg-gradient-to-r from-gray-50 to-white">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-lg">🍽️</span>
-          </div>
-          {!collapsed && (
-            <div>
-              <span className="text-2xl font-black text-gray-900">{restaurantName}</span>
-              <p className="text-xs text-gray-500 font-medium -mt-1">{restaurantSubtitle}</p>
+          {collapsed ? (
+            <Logo size="sm" />
+          ) : (
+            <div className="flex items-center gap-3">
+              <Logo size="sm" />
+              <div>
+                <span className="text-lg font-light text-gray-900" style={{ fontFamily: 'serif', fontWeight: 300 }}>{restaurantName}</span>
+                <p className="text-xs text-gray-500 font-medium -mt-1">{restaurantSubtitle}</p>
+              </div>
             </div>
           )}
         </div>

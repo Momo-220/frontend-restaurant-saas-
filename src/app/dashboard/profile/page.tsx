@@ -232,12 +232,25 @@ export default function ProfilePage() {
                       </div>
                     )}
                   </div>
-                  <Button 
-                    size="sm" 
-                    className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 text-white p-0"
-                  >
-                    <Camera className="h-4 w-4" />
-                  </Button>
+                  {isEditing && (
+                    <div className="absolute -bottom-2 -right-2 flex items-center gap-2">
+                      <input
+                        type="url"
+                        placeholder="URL du logo"
+                        value={restaurantData.logo_url || ''}
+                        onChange={(e) => setRestaurantData({ ...restaurantData, logo_url: e.target.value })}
+                        className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm"
+                      />
+                      <Button 
+                        size="sm" 
+                        className="w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 text-white p-0"
+                        onClick={handleSave}
+                        disabled={isLoading}
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Informations */}
