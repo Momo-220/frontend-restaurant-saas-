@@ -149,7 +149,7 @@ export default function RegisterPage() {
       
       console.log('Création utilisateur avec:', userPayload);
       
-      const userResponse = await fetch(`${API}/auth/register`, {
+      const userResponse = await fetch(`${API}/api/v1/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
