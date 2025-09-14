@@ -257,6 +257,8 @@ export function useAuth() {
     setIsLoading(true);
     try {
       await authService.register(data);
+      // Rafraîchir l'utilisateur après inscription
+      setUser(authService.getUser());
     } finally {
       setIsLoading(false);
     }

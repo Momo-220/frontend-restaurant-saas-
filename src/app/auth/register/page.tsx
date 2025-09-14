@@ -174,9 +174,14 @@ export default function RegisterPage() {
         // Utiliser authService pour sauvegarder les données
         authService.setToken(userData.access_token);
         authService.setUser(userData.user);
+        
+        // Force le rechargement de la page pour que useAuth détecte le changement
+        showSuccess("Inscription réussie !", `Bienvenue ${formData.restaurantName} !`);
+        window.location.href = '/dashboard';
+      } else {
+        showSuccess("Inscription réussie !", `Bienvenue ${formData.restaurantName} !`);
+        router.push('/dashboard');
       }
-      showSuccess("Inscription réussie !", `Bienvenue ${formData.restaurantName} !`);
-      router.push('/dashboard');
 
     } catch (error) {
       console.error('Erreur register:', error);
