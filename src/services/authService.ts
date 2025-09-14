@@ -65,17 +65,7 @@ class AuthService {
     if (!this.baseURL.endsWith('/api/v1')) {
       this.baseURL += '/api/v1';
     }
-    // Charger token et utilisateur depuis localStorage si disponibles
-    if (typeof window !== 'undefined') {
-      const existingUser = localStorage.getItem('nomo_user');
-      const existingToken = localStorage.getItem('nomo_token');
-      if (existingUser) {
-        try { this.user = JSON.parse(existingUser); } catch {}
-      }
-      if (existingToken) {
-        this.token = existingToken;
-      }
-    }
+    // Plus de localStorage - tout en base de données maintenant
   }
 
   // Déconnexion
@@ -155,10 +145,7 @@ class AuthService {
     this.token = data.access_token;
     this.user = data.user;
 
-    if (typeof window !== 'undefined' && this.token) {
-      localStorage.setItem('nomo_token', this.token);
-      localStorage.setItem('nomo_user', JSON.stringify(this.user));
-    }
+    // Plus de localStorage - tout en base de données maintenant
 
     return data;
   }

@@ -44,10 +44,7 @@ export default function LoginPage() {
         throw new Error(data?.message || `HTTP ${res.status}: ${res.statusText}`);
       }
 
-      if (data?.access_token && data?.user) {
-        localStorage.setItem("nomo_token", data.access_token);
-        localStorage.setItem("nomo_user", JSON.stringify(data.user));
-      }
+      // Plus de localStorage - tout en base de données maintenant
       showSuccess("Connexion réussie !", `Bienvenue ${data?.user?.tenant?.name || "sur NOMO"}`);
       router.push("/dashboard");
     } catch (error) {
