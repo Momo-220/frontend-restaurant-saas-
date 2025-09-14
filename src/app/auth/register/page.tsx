@@ -175,20 +175,8 @@ export default function RegisterPage() {
         authService.setToken(userData.access_token);
         authService.setUser(userData.user);
       }
-      if (userData?.access_token && userData?.user) {
-        try {
-          localStorage.setItem('nomo_token', userData.access_token);
-          localStorage.setItem('nomo_user', JSON.stringify(userData.user));
-        } catch {}
-        showSuccess("Inscription réussie !", `Bienvenue ${formData.restaurantName} !`);
-        router.push('/dashboard');
-      } else {
-        showSuccess(
-          "Inscription réussie !", 
-          `Bienvenue ${formData.restaurantName} ! Vous pouvez maintenant vous connecter.`
-        );
-        router.push('/auth/login');
-      }
+      showSuccess("Inscription réussie !", `Bienvenue ${formData.restaurantName} !`);
+      router.push('/dashboard');
 
     } catch (error) {
       console.error('Erreur register:', error);
