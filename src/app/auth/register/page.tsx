@@ -13,6 +13,7 @@ import { useGlobalToast } from "@/hooks/useGlobalToast";
 import { Eye, EyeOff, Mail, Lock, User, Store, ArrowLeft, CreditCard, Globe, MapPin, Phone } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { FileUpload } from "@/components/ui/file-upload";
+import { authService } from "@/services/authService";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -168,7 +169,12 @@ export default function RegisterPage() {
       const userData = await userResponse.json();
       console.log('Utilisateur créé:', userData);
 
-      // Stocker token + user si l'API renvoie auth après register
+      // Connecter automatiquement l'utilisateur après inscription
+      if (userData.access_token && userData.user) {
+        // Utiliser authService pour sauvegarder les données
+        authService.setToken(userData.access_token);
+        authService.setUser(userData.user);
+      }
       if (userData?.access_token && userData?.user) {
         try {
           localStorage.setItem('nomo_token', userData.access_token);

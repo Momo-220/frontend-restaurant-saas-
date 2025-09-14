@@ -94,6 +94,14 @@ class AuthService {
     return this.user;
   }
 
+  setToken(token: string): void {
+    this.token = token;
+  }
+
+  setUser(user: User): void {
+    this.user = user;
+  }
+
   // Obtenir les headers d'authentification
   getAuthHeaders(): Record<string, string> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
