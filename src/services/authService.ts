@@ -1,4 +1,10 @@
-// Service d'authentification pour NOMO
+// Service d'authentification pour NOMO - Migré vers Supabase
+import { createClient } from '@supabase/supabase-js';
+
+// Configuration Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export interface User {
   id: string;
   email: string;
@@ -60,12 +66,27 @@ class AuthService {
   private baseURL: string;
 
   constructor() {
-    // Configuration de l'URL de base
+    // Configuration de l'URL de base - Backend NestJS
     this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://backend-de-restaurant-saas-production.up.railway.app';
-    if (!this.baseURL.endsWith('/api/v1')) {
-      this.baseURL += '/api/v1';
+    // S'assurer que l'URL se termine par /api/v1
+    if (!this.baseURL.includes('/api/v1')) {
+      this.baseURL = this.baseURL.replace(/\/$/, '') + '/api/v1';
     }
-    // Plus de localStorage - tout en base de données maintenant
+    
+    console.log('🔧 AuthService initialized with baseURL:', this.baseURL);
+    
+    // Initialiser depuis localStorage si disponible
+    if (typeof window !== 'undefined') {
+      this.token = localStorage.getItem('nomo_token');
+      const storedUser = localStorage.getItem('nomo_user');
+      if (storedUser) {
+        try {
+          this.user = JSON.parse(storedUser);
+        } catch (e) {
+          console.warn('Erreur parsing user localStorage:', e);
+        }
+      }
+    }
   }
 
   // Déconnexion
@@ -122,7 +143,7 @@ class AuthService {
     // Tente de récupérer le profil depuis l'API si token présent
     const token = this.getToken();
     if (token) {
-      const res = await this.authenticatedFetch(`${this.baseURL}/api/v1/auth/profile`, { method: 'GET' });
+      const res = await this.authenticatedFetch(`${this.baseURL}/auth/profile`, { method: 'GET' });
       if (res.ok) {
         const data = await res.json();
         this.user = data as User;
@@ -137,7 +158,7 @@ class AuthService {
 
   // Connexion
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const res = await fetch(`${this.baseURL}/api/v1/auth/login`, {
+    const res = await fetch(`${this.baseURL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
@@ -153,14 +174,18 @@ class AuthService {
     this.token = data.access_token;
     this.user = data.user;
 
-    // Plus de localStorage - tout en base de données maintenant
+    // Sauvegarder en localStorage
+    if (typeof window !== 'undefined' && this.token) {
+      localStorage.setItem('nomo_token', this.token);
+      localStorage.setItem('nomo_user', JSON.stringify(this.user));
+    }
 
     return data;
   }
 
   // Inscription
-  async register(data: RegisterData): Promise<void> {
-    const res = await fetch(`${this.baseURL}/api/v1/auth/register`, {
+  async register(data: RegisterData): Promise<AuthResponse> {
+    const res = await fetch(`${this.baseURL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -171,15 +196,28 @@ class AuthService {
       const body = ct.includes('application/json') ? await res.json().catch(() => undefined) : undefined;
       throw new Error(body?.message || `HTTP ${res.status}: ${res.statusText}`);
     }
+
+    const authData = await res.json();
+    this.token = authData.access_token;
+    this.user = authData.user;
+
+    // Sauvegarder en localStorage
+    if (typeof window !== 'undefined' && this.token) {
+      localStorage.setItem('nomo_token', this.token);
+      localStorage.setItem('nomo_user', JSON.stringify(this.user));
+    }
+
+    return authData;
   }
 
   // Mettre à jour le profil restaurant
   async updateRestaurantProfile(data: Partial<User['tenant']>): Promise<User['tenant']> {
     if (!this.user?.tenant?.id) throw new Error('Aucun restaurant à mettre à jour');
+    
     // Ne transmettre que les champs supportés par le backend
     const allowed: Record<string, any> = {};
     if (typeof data.name !== 'undefined') allowed.name = data.name;
-    if (typeof data.slug !== 'undefined') allowed.slug = data.slug as any;
+    if (typeof data.slug !== 'undefined') allowed.slug = data.slug;
     if (typeof data.email !== 'undefined') allowed.email = data.email;
     if (typeof data.phone !== 'undefined') allowed.phone = data.phone;
     if (typeof data.address !== 'undefined') allowed.address = data.address;
@@ -189,20 +227,24 @@ class AuthService {
     if (typeof data.banner_url !== 'undefined') allowed.banner_url = data.banner_url;
     if (typeof data.payment_info !== 'undefined') allowed.payment_info = data.payment_info;
 
-    const res = await this.authenticatedFetch(`${this.baseURL}/api/v1/tenants/${this.user.tenant.id}`, {
+    const res = await this.authenticatedFetch(`${this.baseURL}/tenants/${this.user.tenant.id}`, {
       method: 'PATCH',
       body: JSON.stringify(allowed),
     });
+    
     if (!res.ok) {
       const ct = res.headers.get('content-type') || '';
       const body = ct.includes('application/json') ? await res.json().catch(() => undefined) : undefined;
       throw new Error(body?.message || `HTTP ${res.status}: ${res.statusText}`);
     }
+    
     const updatedTenant = await res.json();
-    this.user.tenant = { ...this.user.tenant, ...updatedTenant } as any;
+    this.user.tenant = { ...this.user.tenant, ...updatedTenant };
+    
     if (typeof window !== 'undefined') {
       localStorage.setItem('nomo_user', JSON.stringify(this.user));
     }
+    
     return this.user.tenant;
   }
 }
@@ -256,9 +298,10 @@ export function useAuth() {
   const register = async (data: RegisterData) => {
     setIsLoading(true);
     try {
-      await authService.register(data);
-      // Rafraîchir l'utilisateur après inscription
-      setUser(authService.getUser());
+      const result = await authService.register(data);
+      // Mettre à jour l'utilisateur après inscription
+      setUser(result.user);
+      return result;
     } finally {
       setIsLoading(false);
     }

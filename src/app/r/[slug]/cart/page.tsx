@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useGlobalToast } from "@/hooks/useGlobalToast";
+import { ManualPaymentModal } from "@/components/payments/ManualPaymentModal";
 
 // Types pour le panier
 interface CartItem {
@@ -56,6 +57,10 @@ export default function CartPage() {
     notes: '',
     paymentMethod: 'cash'
   });
+  
+  // États pour le paiement manuel
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [restaurantPaymentInfo, setRestaurantPaymentInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -137,6 +142,33 @@ export default function CartPage() {
   const total = subtotal + deliveryFee;
   const itemsCount = cart.reduce((total, item) => total + item.quantity, 0);
 
+  // Charger les informations de paiement du restaurant
+  const loadRestaurantPaymentInfo = async () => {
+    try {
+      // TODO: Appel API réel - pour le moment on simule
+      const mockPaymentInfo = {
+        restaurant_name: `Restaurant ${slug}`,
+        payment_methods: {
+          wave: {
+            number: "77 123 45 67",
+            name: "Restaurant Chez Fatou"
+          },
+          mynita: {
+            number: "78 987 65 43", 
+            name: "Restaurant Chez Fatou"
+          },
+          orange_money: {
+            number: "77 555 44 33",
+            name: "Restaurant Chez Fatou"
+          }
+        }
+      };
+      setRestaurantPaymentInfo(mockPaymentInfo);
+    } catch (error) {
+      console.error('Erreur chargement infos paiement:', error);
+    }
+  };
+
   // Soumettre la commande
   const handleSubmitOrder = async () => {
     if (!orderInfo.customerName || !orderInfo.customerPhone) {
@@ -144,6 +176,21 @@ export default function CartPage() {
       return;
     }
 
+    // Si paiement mobile, ouvrir le modal de paiement
+    if (orderInfo.paymentMethod !== 'cash') {
+      if (!restaurantPaymentInfo) {
+        await loadRestaurantPaymentInfo();
+      }
+      setIsPaymentModalOpen(true);
+      return;
+    }
+
+    // Si paiement cash, soumettre directement
+    await submitOrderToAPI();
+  };
+
+  // Soumettre la commande à l'API (après paiement ou pour cash)
+  const submitOrderToAPI = async () => {
     setIsSubmitting(true);
 
     try {
@@ -174,7 +221,6 @@ export default function CartPage() {
       clearCart();
       
       // Rediriger vers une page de confirmation avec l'ID de commande
-      // Utiliser href normal pour préserver l'historique et permettre le retour
       window.location.href = `/r/${slug}/order-success?orderId=${orderId}&total=${total}&items=${itemsCount}`;
       
     } catch (error) {
@@ -183,6 +229,15 @@ export default function CartPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Confirmer le paiement manuel
+  const handlePaymentConfirmed = async (transactionRef: string, method: string) => {
+    console.log('💰 Paiement confirmé:', { transactionRef, method, total });
+    showInfo('Paiement confirmé', 'Votre paiement a été enregistré');
+    setIsPaymentModalOpen(false);
+    // Soumettre la commande avec les infos de paiement
+    await submitOrderToAPI();
   };
 
   if (loading) {
@@ -243,11 +298,24 @@ export default function CartPage() {
               <div className="animate-spin w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full"></div>
               <span>Redirection automatique dans quelques secondes...</span>
             </div>
-          </div>
         </div>
       </div>
-    );
-  }
+
+      {/* Modal de paiement manuel */}
+      {restaurantPaymentInfo && (
+        <ManualPaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          restaurantName={restaurantPaymentInfo.restaurant_name}
+          paymentMethods={restaurantPaymentInfo.payment_methods}
+          orderTotal={total}
+          orderId={`ORDER_${Date.now()}`}
+          onPaymentConfirmed={handlePaymentConfirmed}
+        />
+      )}
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-gray-50">

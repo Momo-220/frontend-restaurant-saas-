@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { 
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
+  Plus, 
+  Edit, 
+  Trash2, 
+  Eye, 
   EyeOff, 
-  Search,
-  ChefHat,
+  Search, 
+  ChefHat, 
   Utensils,
   DollarSign,
   Clock,
@@ -84,7 +84,7 @@ function MenusPageInner() {
   // Charger les items d'une catégorie
   const loadItems = async (categoryId?: string) => {
     if (authLoading || !user) return;
-
+    
     setLoading(true);
     try {
       const data = await categoriesService.getItems(categoryId, true);
@@ -289,31 +289,11 @@ function MenusPageInner() {
   };
 
   if (authLoading) {
-  return (
+    return (
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Chargement de votre menu...</p>
-          </div>
-        </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <ChefHat className="h-10 w-10 text-red-600" />
-          </div>
-          <h3 className="text-2xl font-black text-gray-800 mb-3">Connexion requise</h3>
-          <p className="text-gray-600 mb-6">Vous devez être connecté pour gérer vos menus</p>
-            <Button 
-            onClick={() => window.location.href = '/auth/login'}
-            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-8 py-3 rounded-2xl"
-            >
-            Se connecter
-            </Button>
         </div>
       </div>
     );
@@ -341,12 +321,12 @@ function MenusPageInner() {
                   <ChefHat className="h-6 w-6 text-white" />
                 ) : (
                   <Utensils className="h-6 w-6 text-white" />
-          )}
-        </div>
-      <div>
+                )}
+              </div>
+              <div>
                 <h1 className="text-3xl font-black text-gray-900">
                   {currentView === 'categories' ? 'Mes Catégories' : selectedCategory?.name}
-        </h1>
+                </h1>
                 <p className="text-gray-600 font-medium">
                   {currentView === 'categories' 
                     ? 'Organisez votre menu par sections' 
@@ -355,8 +335,8 @@ function MenusPageInner() {
               </div>
             </div>
           </div>
-      </div>
-
+        </div>
+        
         <Button 
           onClick={() => {
             if (currentView === 'categories') {
@@ -481,13 +461,13 @@ function MenusPageInner() {
                     ? 'Essayez avec d\'autres mots-clés ou créez une nouvelle catégorie'
                     : 'Commencez par organiser votre menu en créant des catégories comme "Entrées", "Plats principaux", etc.'}
                 </p>
-                      <Button 
+                <Button 
                   onClick={() => setIsCategoryFormOpen(true)}
                   className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-8 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <Plus className="h-5 w-5 mr-2" />
                   Créer ma première catégorie
-                      </Button>
+                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -509,8 +489,8 @@ function MenusPageInner() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                  
+                </div>
+                
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="font-black text-lg text-gray-900 line-clamp-1">{category.name}</h3>
@@ -523,7 +503,7 @@ function MenusPageInner() {
                     >
                       {category.is_active ? 'Actif' : 'Inactif'}
                     </Badge>
-                    </div>
+                  </div>
                   
                   {category.description && (
                     <p className="text-gray-600 text-sm mb-6 line-clamp-2">
@@ -535,7 +515,7 @@ function MenusPageInner() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                onClick={() => goToItems(category)}
+                      onClick={() => goToItems(category)}
                       className="flex-1 hover:bg-green-50 hover:border-green-200 hover:text-green-700 font-semibold"
                     >
                       <Eye className="h-4 w-4 mr-2" />
@@ -543,7 +523,7 @@ function MenusPageInner() {
                     </Button>
                     <Button 
                       variant="outline" 
-                      size="sm" 
+                      size="sm"
                       onClick={() => {
                         setEditingCategory(category);
                         setIsCategoryFormOpen(true);
@@ -554,7 +534,7 @@ function MenusPageInner() {
                     </Button>
                     <Button 
                       variant="outline" 
-                      size="sm" 
+                      size="sm"
                       onClick={() => handleDeleteCategory(category)}
                       className="hover:bg-red-50 hover:border-red-200 hover:text-red-700"
                     >
@@ -564,11 +544,11 @@ function MenusPageInner() {
                 </CardContent>
               </Card>
             ))
-            )}
-          </div>
+          )}
+        </div>
       ) : (
         // Vue Items avec style dashboard
-          <div className="space-y-4">
+        <div className="space-y-4">
           {loading ? (
             Array.from({ length: 6 }).map((_, i) => (
               <Card key={i} className="animate-pulse">
@@ -589,7 +569,7 @@ function MenusPageInner() {
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-orange-200 rounded-3xl flex items-center justify-center mb-6">
                   <Utensils className="h-10 w-10 text-orange-600" />
-              </div>
+                </div>
                 <h3 className="text-2xl font-black text-gray-800 mb-3">
                   {searchQuery ? 'Aucun plat trouvé' : 'Ajoutez votre premier plat'}
                 </h3>
@@ -623,8 +603,8 @@ function MenusPageInner() {
                         <Utensils className="h-10 w-10 text-gray-400" />
                       )}
                     </div>
-
-                        <div className="flex-1">
+                    
+                    <div className="flex-1">
                       <div className="flex items-start justify-between mb-3">
                         <h3 className="font-black text-xl text-gray-900">{item.name}</h3>
                         <div className="flex items-center gap-3">
@@ -642,30 +622,30 @@ function MenusPageInner() {
                             }
                           >
                             {item.out_of_stock ? 'Rupture' : item.is_available ? 'Disponible' : 'Indisponible'}
-                            </Badge>
-                          </div>
+                          </Badge>
                         </div>
-
+                      </div>
+                      
                       {item.description && (
                         <p className="text-gray-600 mb-4 line-clamp-2">{item.description}</p>
                       )}
-
+                      
                       <div className="flex gap-2">
-                          <Button 
+                        <Button 
                           variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setEditingItem(item);
+                          size="sm"
+                          onClick={() => {
+                            setEditingItem(item);
                             setIsItemFormOpen(true);
-                            }}
+                          }}
                           className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 font-semibold"
-                          >
+                        >
                           <Edit className="h-4 w-4 mr-2" />
                           Modifier
-                          </Button>
-                          <Button 
+                        </Button>
+                        <Button 
                           variant="outline" 
-                            size="sm" 
+                          size="sm"
                           onClick={() => handleToggleStock(item)}
                           className={
                             item.out_of_stock 
@@ -690,9 +670,9 @@ function MenusPageInner() {
                           size="sm"
                           onClick={() => handleDeleteItem(item)}
                           className="hover:bg-red-50 hover:border-red-200 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -751,8 +731,8 @@ function MenusPageInner() {
             onSubmit={editingItem ? handleUpdateItem : handleCreateItem}
             onCancel={() => {
               setIsItemFormOpen(false);
-          setEditingItem(null);
-        }}
+              setEditingItem(null);
+            }}
           />
         </DialogContent>
       </Dialog>
@@ -872,8 +852,8 @@ function ItemFormWithUpload({
           placeholder="Ex: Thieboudienne, Yassa poulet, Pastels..."
           className="text-lg py-3 rounded-xl border-gray-300 focus:border-green-500 focus:ring-green-500"
           required
-      />
-    </div>
+        />
+      </div>
       
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-3">Description</label>
@@ -920,8 +900,8 @@ function ItemFormWithUpload({
           accept="image/*"
           placeholder="Ajoutez une photo appétissante de votre plat"
           className="rounded-xl"
-      />
-    </div>
+        />
+      </div>
       
       <div className="flex gap-4 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1 py-3 rounded-xl">

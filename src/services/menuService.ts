@@ -68,13 +68,22 @@ class MenuService {
 	// Headers sans Content-Type (laisse le navigateur définir pour FormData)
 	private getAuthHeaders(): HeadersInit {
 		if (typeof window === 'undefined') return {};
-		// TODO: Utiliser le token et tenant depuis le contexte d'authentification
-		console.log('🔐 Récupération token/tenant depuis auth context - À implémenter');
-		const token = '';
-		const tenant = this.tenantId || '';
+		
+		// Import dynamique pour éviter les erreurs SSR
+		const { authService } = require('./authService');
+		
+		const token = authService.getToken();
+		const user = authService.getUser();
 		const headers: HeadersInit = {};
-		if (token) headers['Authorization'] = `Bearer ${token}`;
-		if (tenant) headers['X-Tenant-Id'] = tenant;
+		
+		if (token) {
+			headers['Authorization'] = `Bearer ${token}`;
+		}
+		
+		if (user?.tenant_id) {
+			headers['X-Tenant-Id'] = user.tenant_id;
+		}
+		
 		return headers;
 	}
 
