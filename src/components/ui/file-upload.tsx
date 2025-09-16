@@ -4,7 +4,7 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, Image, File } from 'lucide-react';
 import { Button } from './button';
-import { supabaseStorage } from '@/services/supabase';
+import { imageStorage } from '@/lib/imageStorage';
 
 interface FileUploadProps {
   onFileSelect: (file: File | null, url?: string) => void;
@@ -69,20 +69,20 @@ export function FileUpload({
           
           switch (uploadType) {
             case 'logo':
-              uploadedUrl = await supabaseStorage.uploadLogo(file, restaurantId);
+              uploadedUrl = await imageStorage.uploadLogo(file, restaurantId);
               break;
             case 'banner':
-              uploadedUrl = await supabaseStorage.uploadBanner(file, restaurantId);
+              uploadedUrl = await imageStorage.uploadBanner(file, restaurantId);
               break;
             case 'menu-item':
               if (itemId) {
-                uploadedUrl = await supabaseStorage.uploadMenuItemImage(file, restaurantId, itemId);
+                uploadedUrl = await imageStorage.uploadMenuItemImage(file, restaurantId, itemId);
               } else {
                 throw new Error('itemId requis pour upload menu-item');
               }
               break;
             default:
-              uploadedUrl = await supabaseStorage.uploadFile(file);
+              uploadedUrl = await imageStorage.uploadFile(file);
           }
           
           onFileSelect(file, uploadedUrl);

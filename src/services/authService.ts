@@ -1,10 +1,4 @@
-// Service d'authentification pour NOMO - Migré vers Supabase
-import { createClient } from '@supabase/supabase-js';
-
-// Configuration Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Service d'authentification pour NOMO - Backend NestJS
 export interface User {
   id: string;
   email: string;
