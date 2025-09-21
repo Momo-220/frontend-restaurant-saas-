@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PublicGuard } from "@/components/auth/AuthGuard";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useGlobalToast } from "@/hooks/useGlobalToast";
+import { useAuth } from "@/services/authService";
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 
@@ -18,9 +19,31 @@ export default function LoginPage() {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { showSuccess, showError } = useGlobalToast();
+  const { login, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
+
+  // Rediriger vers le dashboard si déjà connecté
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, router]);
+
+  // Écouter les événements de connexion réussie
+  useEffect(() => {
+    const handleLoginSuccess = () => {
+      router.push("/dashboard");
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth-login-success', handleLoginSuccess);
+      
+      return () => {
+        window.removeEventListener('auth-login-success', handleLoginSuccess);
+      };
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,30 +51,19 @@ export default function LoginPage() {
       showError("Champs requis", "Veuillez remplir tous les champs");
       return;
     }
-    setIsLoading(true);
+
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "";
-      const res = await fetch(`${API}/api/v1/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+      const result = await login({
+        email: formData.email,
+        password: formData.password,
       });
 
-      const ct = res.headers.get("content-type") || "";
-      const hasJson = ct.includes("application/json");
-      const data = hasJson ? await res.json().catch(() => undefined) : undefined;
-      if (!res.ok) {
-        throw new Error(data?.message || `HTTP ${res.status}: ${res.statusText}`);
-      }
-
-      // Plus de localStorage - tout en base de données maintenant
-      showSuccess("Connexion réussie !", `Bienvenue ${data?.user?.tenant?.name || "sur NOMO"}`);
-      router.push("/dashboard");
+      showSuccess("Connexion réussie !", `Bienvenue ${result.user?.tenant?.name || "sur NOMO"}`);
+      
+      // La redirection se fera via l'événement 'auth-login-success'
     } catch (error) {
       console.error("Erreur login:", error);
       showError("Erreur de connexion", error instanceof Error ? error.message : "Vérifiez vos identifiants");
-    } finally {
-      setIsLoading(false);
     }
   };
 

@@ -134,20 +134,52 @@ class AuthService {
 
   // Rafraîchir les données utilisateur
   async refreshUser(): Promise<User> {
-    // Tente de récupérer le profil depuis l'API si token présent
     const token = this.getToken();
-    if (token) {
-      const res = await this.authenticatedFetch(`${this.baseURL}/auth/profile`, { method: 'GET' });
-      if (res.ok) {
-        const data = await res.json();
-        this.user = data as User;
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('nomo_user', JSON.stringify(this.user));
-        }
-        return this.user;
-      }
+    if (!token) {
+      throw new Error('Aucun token d\'authentification');
     }
-    return this.user as User;
+
+    try {
+      // Timeout de 5 secondes pour éviter que ça traîne
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const res = await this.authenticatedFetch(`${this.baseURL}/auth/profile`, { 
+        method: 'GET',
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!res.ok) {
+        if (res.status === 401) {
+          // Token expiré ou invalide
+          this.logout();
+          throw new Error('Token d\'authentification expiré');
+        }
+        throw new Error(`Erreur ${res.status}: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      this.user = data as User;
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('nomo_user', JSON.stringify(this.user));
+      }
+      
+      return this.user;
+    } catch (error) {
+      console.error('Erreur refresh user:', error);
+      
+      // Si c'est un timeout ou une erreur réseau, garder l'utilisateur en cache
+      if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('fetch'))) {
+        console.warn('Timeout ou erreur réseau, utilisation du cache utilisateur');
+        return this.user as User;
+      }
+      
+      this.logout();
+      throw error;
+    }
   }
 
   // Connexion
@@ -172,6 +204,11 @@ class AuthService {
     if (typeof window !== 'undefined' && this.token) {
       localStorage.setItem('nomo_token', this.token);
       localStorage.setItem('nomo_user', JSON.stringify(this.user));
+      
+      // Déclencher un événement pour notifier les autres composants
+      window.dispatchEvent(new CustomEvent('auth-login-success', { 
+        detail: { user: this.user, token: this.token } 
+      }));
     }
 
     return data;
@@ -257,25 +294,63 @@ export function useAuth() {
   useEffect(() => {
     setIsMounted(true);
     
-    // Écouter les changements d'authentification seulement côté client
-    const checkAuth = () => {
-      setUser(authService.getUser());
-    };
-
-    // Vérifier l'état initial seulement côté client
+    // Vérifier l'authentification seulement côté client
     if (typeof window !== 'undefined') {
+      const checkAuth = () => {
+        const currentUser = authService.getUser();
+        const currentToken = authService.getToken();
+        
+        // Si on a déjà un utilisateur en cache, l'utiliser directement
+        if (currentUser) {
+          setUser(currentUser);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Si on a un token mais pas d'utilisateur, essayer de récupérer le profil
+        if (currentToken && !currentUser) {
+          // Vérifier d'abord si on a un utilisateur en localStorage
+          const storedUser = localStorage.getItem('nomo_user');
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              authService.setUser(parsedUser);
+              setUser(parsedUser);
+              setIsLoading(false);
+              return;
+            } catch (e) {
+              console.warn('Erreur parsing user localStorage:', e);
+            }
+          }
+          
+          // Sinon, essayer de récupérer depuis l'API
+          authService.refreshUser().then((user) => {
+            setUser(user);
+            setIsLoading(false);
+          }).catch(() => {
+            // Token invalide, déconnecter
+            authService.logout();
+            setUser(null);
+            setIsLoading(false);
+          });
+        } else {
+          setUser(currentUser);
+          setIsLoading(false);
+        }
+      };
+
       checkAuth();
-      setIsLoading(false);
       
       // Écouter les changements de localStorage
       window.addEventListener('storage', checkAuth);
-    }
-    
-    return () => {
-      if (typeof window !== 'undefined') {
+      
+      return () => {
         window.removeEventListener('storage', checkAuth);
-      }
-    };
+      };
+    } else {
+      // Côté serveur, pas de chargement
+      setIsLoading(false);
+    }
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
@@ -283,6 +358,14 @@ export function useAuth() {
     try {
       const result = await authService.login(credentials);
       setUser(result.user);
+      
+      // Déclencher un événement pour notifier les autres composants
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth-state-changed', { 
+          detail: { user: result.user, isAuthenticated: true } 
+        }));
+      }
+      
       return result;
     } finally {
       setIsLoading(false);

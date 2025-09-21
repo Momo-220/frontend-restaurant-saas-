@@ -19,7 +19,8 @@ import {
   QrCode,
   Link as LinkIcon,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  User
 } from "lucide-react";
 import { useGlobalToast } from "@/hooks/useGlobalToast";
 import { useAuth } from "@/services/authService";
@@ -44,25 +45,68 @@ export default function ProfilePage() {
     banner_url: null as string | null,
   });
 
+  // Données utilisateur depuis la base de données
+  const [userData, setUserData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    role: "",
+  });
+
+  // Données de paiement depuis la base de données
+  const [paymentData, setPaymentData] = useState({
+    myNitaNumber: "",
+    myNitaName: "",
+    waveNumber: "",
+    waveName: "",
+    orangeMoneyNumber: "",
+    orangeMoneyName: "",
+  });
+
   // Synchroniser avec les données utilisateur RÉELLES depuis PostgreSQL
   React.useEffect(() => {
-    if (user?.tenant) {
-      setRestaurantData({
-        name: user.tenant.name || "",
-        description: user.tenant.description || "",
-        address: user.tenant.address || "",
-        phone: user.tenant.phone || "",
-        email: user.tenant.email || "",
-        website: user.tenant.website || "",
-        slug: user.tenant.slug || "",
-        logo_url: user.tenant.logo_url || null,
-        banner_url: user.tenant.banner_url || null,
+    if (user) {
+      // Données du restaurant
+      if (user.tenant) {
+        setRestaurantData({
+          name: user.tenant.name || "",
+          description: user.tenant.description || "",
+          address: user.tenant.address || "",
+          phone: user.tenant.phone || "",
+          email: user.tenant.email || "",
+          website: user.tenant.website || "",
+          slug: user.tenant.slug || "",
+          logo_url: user.tenant.logo_url || null,
+          banner_url: user.tenant.banner_url || null,
+        });
+      }
+
+      // Données utilisateur
+      setUserData({
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        email: user.email || "",
+        role: user.role || "",
       });
+
+      // Données de paiement
+      if (user.tenant?.payment_info) {
+        setPaymentData({
+          myNitaNumber: user.tenant.payment_info.myNita?.number || "",
+          myNitaName: user.tenant.payment_info.myNita?.name || "",
+          waveNumber: user.tenant.payment_info.wave?.number || "",
+          waveName: user.tenant.payment_info.wave?.name || "",
+          orangeMoneyNumber: user.tenant.payment_info.orangeMoney?.number || "",
+          orangeMoneyName: user.tenant.payment_info.orangeMoney?.name || "",
+        });
+      }
     }
   }, [user]);
 
   const tabs = [
     { id: "general", label: "Informations Générales", icon: Store },
+    { id: "user", label: "Mon Compte", icon: User },
+    { id: "payments", label: "Paiements", icon: CreditCard },
     { id: "appearance", label: "Apparence", icon: Palette },
     { id: "qr", label: "QR Code", icon: QrCode },
   ];
@@ -93,6 +137,7 @@ export default function ProfilePage() {
       );
     }
   };
+
 
   const generateQRCode = async () => {
     try {
@@ -143,44 +188,84 @@ export default function ProfilePage() {
     }
   };
 
+  // Affichage de chargement seulement si vraiment en cours de chargement
+  if (isLoading) {
+    return (
+      <div className="space-y-6 md:space-y-8 lg:space-y-10 p-4 md:p-6 lg:p-10 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 font-medium">Chargement de votre profil...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si pas d'utilisateur après le chargement, rediriger vers login
+  if (!user) {
+    return (
+      <div className="space-y-6 md:space-y-8 lg:space-y-10 p-4 md:p-6 lg:p-10 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <User className="h-10 w-10 text-red-600" />
+            </div>
+            <h3 className="text-2xl font-black text-gray-800 mb-3">Connexion requise</h3>
+            <p className="text-gray-600 mb-6">Vous devez être connecté pour accéder à votre profil</p>
+            <Button 
+              onClick={() => window.location.href = '/auth/login'}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-8 py-3 rounded-2xl"
+            >
+              Se connecter
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8 p-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 md:space-y-8 lg:space-y-10 p-4 md:p-6 lg:p-10 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen">
+      {/* Header avec style dashboard uniforme */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-5xl font-black text-gray-900 mb-3 tracking-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-6xl font-black text-gray-900 mb-2 md:mb-4 tracking-tight">
             Profil Restaurant
           </h1>
-          <p className="text-xl text-gray-600 font-medium max-w-3xl leading-relaxed">
+          <p className="text-base md:text-lg lg:text-xl text-gray-600 font-medium max-w-2xl leading-relaxed">
             Gérez les informations de votre établissement et personnalisez votre présence
           </p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           {isEditing ? (
             <>
               <Button 
                 variant="outline" 
                 onClick={() => setIsEditing(false)}
-                className="px-6 py-4 rounded-2xl font-medium"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all"
               >
                 Annuler
               </Button>
               <Button 
                 onClick={handleSave}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold"
+                disabled={isLoading}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
               >
-                <Save className="h-5 w-5 mr-2" />
+                <Save className="h-5 w-5" />
                 Sauvegarder
               </Button>
             </>
           ) : (
-            <Button 
-              onClick={() => setIsEditing(true)}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold"
-            >
-              <Edit className="h-5 w-5 mr-2" />
-              Modifier
-            </Button>
+            <>
+              <Button 
+                onClick={() => setIsEditing(true)}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
+              >
+                <Edit className="h-5 w-5" />
+                Modifier
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -314,8 +399,10 @@ export default function ProfilePage() {
                 <input
                   type="text"
                   value={restaurantData.name}
+                  onChange={(e) => setRestaurantData({ ...restaurantData, name: e.target.value })}
                   disabled={!isEditing}
                   className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                  placeholder="Nom de votre restaurant"
                 />
               </div>
 
@@ -323,9 +410,11 @@ export default function ProfilePage() {
                 <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
                 <textarea
                   value={restaurantData.description}
+                  onChange={(e) => setRestaurantData({ ...restaurantData, description: e.target.value })}
                   disabled={!isEditing}
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50 resize-none"
+                  placeholder="Décrivez votre restaurant..."
                 />
               </div>
 
@@ -347,8 +436,10 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={restaurantData.slug}
+                    onChange={(e) => setRestaurantData({ ...restaurantData, slug: e.target.value })}
                     disabled={!isEditing}
                     className="flex-1 px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                    placeholder="votre-restaurant"
                   />
                 </div>
               </div>
@@ -368,8 +459,10 @@ export default function ProfilePage() {
                 <input
                   type="text"
                   value={restaurantData.address}
+                  onChange={(e) => setRestaurantData({ ...restaurantData, address: e.target.value })}
                   disabled={!isEditing}
                   className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                  placeholder="Adresse complète de votre restaurant"
                 />
               </div>
 
@@ -381,8 +474,10 @@ export default function ProfilePage() {
                 <input
                   type="tel"
                   value={restaurantData.phone}
+                  onChange={(e) => setRestaurantData({ ...restaurantData, phone: e.target.value })}
                   disabled={!isEditing}
                   className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                  placeholder="Numéro de téléphone"
                 />
               </div>
 
@@ -394,8 +489,10 @@ export default function ProfilePage() {
                 <input
                   type="email"
                   value={restaurantData.email}
+                  onChange={(e) => setRestaurantData({ ...restaurantData, email: e.target.value })}
                   disabled={!isEditing}
                   className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                  placeholder="Email du restaurant"
                 />
               </div>
 
@@ -407,8 +504,10 @@ export default function ProfilePage() {
                 <input
                   type="url"
                   value={restaurantData.website}
+                  onChange={(e) => setRestaurantData({ ...restaurantData, website: e.target.value })}
                   disabled={!isEditing}
                   className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                  placeholder="https://votre-site-web.com"
                 />
               </div>
             </CardContent>
@@ -446,11 +545,207 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div className="text-sm text-gray-600 bg-blue-50 border border-blue-100 rounded-2xl p-4">
-                Côté client: lors du choix du mode de paiement (MyNita, Wave, Orange Money), ces informations s’affichent pour régler manuellement.
+                Côté client: lors du choix du mode de paiement (MyNita, Wave, Orange Money), ces informations s'affichent pour régler manuellement.
               </div>
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {activeTab === "user" && (
+        <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl rounded-3xl overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-2xl font-black text-gray-900">Informations de Mon Compte</CardTitle>
+            <CardDescription className="text-gray-600 font-medium">
+              Vos informations personnelles enregistrées lors de l'inscription
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <User className="inline h-4 w-4 mr-1" />
+                  Prénom
+                </label>
+                <input
+                  type="text"
+                  value={userData.first_name}
+                  disabled={true}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                  placeholder="Votre prénom"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <User className="inline h-4 w-4 mr-1" />
+                  Nom
+                </label>
+                <input
+                  type="text"
+                  value={userData.last_name}
+                  disabled={true}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                  placeholder="Votre nom"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <Mail className="inline h-4 w-4 mr-1" />
+                  Email de connexion
+                </label>
+                <input
+                  type="email"
+                  value={userData.email}
+                  disabled={true}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                  placeholder="Votre email de connexion"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <CheckCircle className="inline h-4 w-4 mr-1" />
+                  Rôle
+                </label>
+                <div className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50">
+                  <Badge className="bg-green-100 text-green-800 border-green-200 font-semibold">
+                    {userData.role || "Restaurant Owner"}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === "payments" && (
+        <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl rounded-3xl overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-2xl font-black text-gray-900">Informations de Paiement</CardTitle>
+            <CardDescription className="text-gray-600 font-medium">
+              Vos informations de paiement configurées lors de l'inscription
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            {/* MyNita */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-purple-600" />
+                MyNita
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Numéro MyNita
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentData.myNitaNumber}
+                    disabled={true}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 disabled:bg-gray-50"
+                    placeholder="Numéro de compte MyNita"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Nom sur MyNita
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentData.myNitaName}
+                    disabled={true}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 disabled:bg-gray-50"
+                    placeholder="Nom associé au compte"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Wave */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-blue-600" />
+                Wave
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Numéro Wave
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentData.waveNumber}
+                    disabled={true}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                    placeholder="Numéro de compte Wave"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Nom sur Wave
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentData.waveName}
+                    disabled={true}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-50"
+                    placeholder="Nom associé au compte"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Orange Money */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-orange-600" />
+                Orange Money
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Numéro Orange Money
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentData.orangeMoneyNumber}
+                    disabled={true}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:bg-gray-50"
+                    placeholder="Numéro Orange Money"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Nom sur Orange Money
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentData.orangeMoneyName}
+                    disabled={true}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:bg-gray-50"
+                    placeholder="Nom associé au compte"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-900 mb-1">Informations de paiement</p>
+                  <p className="text-sm text-blue-700">
+                    Ces informations sont celles que vous avez configurées lors de votre inscription. 
+                    Elles permettent à vos clients de payer leurs commandes via les différents moyens de paiement disponibles.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {activeTab === "qr" && (

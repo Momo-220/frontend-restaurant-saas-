@@ -320,113 +320,106 @@ function MenusPageInner() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* En-tête avec style dashboard */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-        <div className="flex items-center gap-4">
+    <div className="space-y-6 md:space-y-8 lg:space-y-10 p-4 md:p-6 lg:p-10 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen">
+      {/* En-tête avec style dashboard uniforme */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl md:text-4xl lg:text-6xl font-black text-gray-900 mb-2 md:mb-4 tracking-tight">
+            {currentView === 'categories' ? 'Mes Catégories' : selectedCategory?.name}
+          </h1>
+          <p className="text-base md:text-lg lg:text-xl text-gray-600 font-medium max-w-2xl leading-relaxed">
+            {currentView === 'categories' 
+              ? 'Organisez votre menu par sections - Gérez votre carte avec style' 
+              : `Gérez les plats de cette catégorie - ${selectedCategory?.name}`}
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           {currentView === 'items' && (
             <Button 
               variant="outline" 
               onClick={goBackToCategories}
-              className="flex items-center gap-2 hover:bg-green-50 hover:border-green-200"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all"
             >
               <ArrowLeft className="h-4 w-4" />
-              Retour
+              <span className="hidden sm:inline">Retour</span>
             </Button>
           )}
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">
-                {currentView === 'categories' ? (
-                  <ChefHat className="h-6 w-6 text-white" />
-                ) : (
-                  <Utensils className="h-6 w-6 text-white" />
-          )}
+          <Button 
+            onClick={() => {
+              if (currentView === 'categories') {
+                setEditingCategory(null);
+                setIsCategoryFormOpen(true);
+              } else {
+                setEditingItem(null);
+                setIsItemFormOpen(true);
+              }
+            }}
+            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
+          >
+            <Plus className="h-5 w-5" />
+            {currentView === 'categories' ? 'Nouvelle Catégorie' : 'Nouveau Plat'}
+          </Button>
         </div>
-      <div>
-                <h1 className="text-3xl font-black text-gray-900">
-                  {currentView === 'categories' ? 'Mes Catégories' : selectedCategory?.name}
-        </h1>
-                <p className="text-gray-600 font-medium">
-                  {currentView === 'categories' 
-                    ? 'Organisez votre menu par sections' 
-                    : 'Gérez les plats de cette catégorie'}
-                </p>
-              </div>
-            </div>
-          </div>
       </div>
 
-        <Button 
-          onClick={() => {
-            if (currentView === 'categories') {
-              setEditingCategory(null);
-              setIsCategoryFormOpen(true);
-            } else {
-              setEditingItem(null);
-              setIsItemFormOpen(true);
-            }
-          }}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
-        >
-          <Plus className="h-5 w-5" />
-          {currentView === 'categories' ? 'Nouvelle Catégorie' : 'Nouveau Plat'}
-        </Button>
-      </div>
 
-      {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-600 font-semibold text-sm">Total Catégories</p>
-                <p className="text-3xl font-black text-blue-900">{stats.totalCategories}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center">
-                <ChefHat className="h-6 w-6 text-white" />
+      {/* Cartes de statistiques ultra-modernes */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+        {/* Total Catégories */}
+        <Card className="group bg-white/80 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-500 rounded-2xl md:rounded-3xl overflow-hidden hover:scale-105 hover:-translate-y-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 md:pb-6">
+            <CardTitle className="text-sm md:text-base font-bold text-gray-900">
+              Total Catégories
+            </CardTitle>
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg">
+              <ChefHat className="h-6 w-6 md:h-8 md:w-8 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-2 md:mb-3">{stats.totalCategories}</div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="flex items-center gap-1 md:gap-2 bg-blue-100 px-2 md:px-3 py-1 md:py-2 rounded-full">
+                <span className="text-xs md:text-sm font-bold text-blue-700">Sections créées</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-600 font-semibold text-sm">Catégories Actives</p>
-                <p className="text-3xl font-black text-green-900">{stats.activeCategories}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center">
-                <Activity className="h-6 w-6 text-white" />
+        {/* Catégories Actives */}
+        <Card className="group bg-white/80 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-500 rounded-2xl md:rounded-3xl overflow-hidden hover:scale-105 hover:-translate-y-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 md:pb-6">
+            <CardTitle className="text-sm md:text-base font-bold text-gray-900">
+              Catégories Actives
+            </CardTitle>
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg">
+              <Activity className="h-6 w-6 md:h-8 md:w-8 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-2 md:mb-3">{stats.activeCategories}</div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="flex items-center gap-1 md:gap-2 bg-green-100 px-2 md:px-3 py-1 md:py-2 rounded-full">
+                <span className="text-xs md:text-sm font-bold text-green-700">Disponibles</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-600 font-semibold text-sm">Total Plats</p>
-                <p className="text-3xl font-black text-orange-900">{stats.totalItems}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center">
-                <Utensils className="h-6 w-6 text-white" />
-              </div>
+        {/* Total Plats */}
+        <Card className="group bg-white/80 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-500 rounded-2xl md:rounded-3xl overflow-hidden hover:scale-105 hover:-translate-y-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 md:pb-6">
+            <CardTitle className="text-sm md:text-base font-bold text-gray-900">
+              Total Plats
+            </CardTitle>
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg">
+              <Utensils className="h-6 w-6 md:h-8 md:w-8 text-white" />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-600 font-semibold text-sm">Plats Disponibles</p>
-                <p className="text-3xl font-black text-purple-900">{stats.availableItems}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-white" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-2 md:mb-3">{stats.totalItems}</div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="flex items-center gap-1 md:gap-2 bg-orange-100 px-2 md:px-3 py-1 md:py-2 rounded-full">
+                <span className="text-xs md:text-sm font-bold text-orange-700">Plats créés</span>
               </div>
             </div>
           </CardContent>
@@ -434,7 +427,7 @@ function MenusPageInner() {
       </div>
 
       {/* Barre de recherche avec style dashboard */}
-      <Card className="bg-white border-gray-200 shadow-sm">
+      <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl rounded-2xl md:rounded-3xl overflow-hidden">
         <CardContent className="p-6">
           <div className="relative">
             <Search className="h-5 w-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />

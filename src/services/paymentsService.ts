@@ -117,6 +117,12 @@ class PaymentsService {
       method: 'GET',
       headers: this.getHeaders(),
     });
+    
+    // Si pas de paiements disponibles (404), retourner un tableau vide
+    if (response.status === 404) {
+      return [];
+    }
+    
     return this.handleResponse<Payment[]>(response);
   }
 
@@ -133,6 +139,27 @@ class PaymentsService {
       method: 'GET',
       headers: this.getHeaders(),
     });
+    
+    // Si pas de statistiques disponibles (404), retourner des stats vides
+    if (response.status === 404) {
+      return {
+        totalRevenue: 0,
+        totalTransactions: 0,
+        successfulTransactions: 0,
+        pendingTransactions: 0,
+        failedTransactions: 0,
+        averageTransaction: 0,
+        todayRevenue: 0,
+        monthRevenue: 0,
+        paymentMethodBreakdown: {
+          CASH: 0,
+          CARD: 0,
+          WAVE: 0,
+          MYNITA: 0,
+        },
+      };
+    }
+    
     return this.handleResponse<PaymentStats>(response);
   }
 

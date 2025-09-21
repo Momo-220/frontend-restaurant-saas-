@@ -61,11 +61,14 @@ function PaymentsPageInner() {
     setLoading(true);
     try {
       const data = await paymentsService.getPayments(filters);
-      setPayments(data);
-      console.log('✅ Paiements chargés:', data.length);
+      // S'assurer que data est un tableau
+      setPayments(Array.isArray(data) ? data : []);
+      console.log('✅ Paiements chargés:', Array.isArray(data) ? data.length : 0);
     } catch (error) {
       console.error('❌ Erreur chargement paiements:', error);
       showError('Erreur', 'Impossible de charger les paiements');
+      // En cas d'erreur, s'assurer que payments reste un tableau vide
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -77,24 +80,33 @@ function PaymentsPageInner() {
     
     try {
       const data = await paymentsService.getPaymentStats();
-      setStats(data);
-      console.log('✅ Statistiques paiements chargées:', data);
+      // S'assurer que data est un objet valide
+      if (data && typeof data === 'object') {
+        setStats(data);
+        console.log('✅ Statistiques paiements chargées:', data);
+      } else {
+        console.warn('⚠️ Données de statistiques invalides:', data);
+      }
     } catch (error) {
       console.error('❌ Erreur chargement statistiques:', error);
+      // Garder les statistiques par défaut en cas d'erreur
     }
   };
 
   // Effet initial
   useEffect(() => {
-    if (!authLoading && user) {
-      loadPayments();
-      loadStats();
+    if (!authLoading && user && !loading) {
+      // Charger les données seulement si l'utilisateur est connecté et a un tenant
+      if (user.tenant?.id) {
+        loadPayments();
+        loadStats();
+      }
     }
   }, [authLoading, user]);
 
   // Effet pour les filtres
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && user.tenant?.id) {
       const filters: PaymentFilters = {};
       
       if (statusFilter) filters.status = statusFilter;
@@ -125,7 +137,7 @@ function PaymentsPageInner() {
   };
 
   // Filtrer les paiements selon la recherche
-  const filteredPayments = payments.filter(payment => 
+  const filteredPayments = (payments || []).filter(payment => 
     payment.transaction_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     payment.order?.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     payment.order?.customer_phone.includes(searchQuery) ||
@@ -215,87 +227,93 @@ function PaymentsPageInner() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* En-tête avec style dashboard */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+    <div className="space-y-6 md:space-y-8 lg:space-y-10 p-4 md:p-6 lg:p-10 bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen">
+      {/* En-tête avec style dashboard uniforme */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">
-              <CreditCard className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black text-gray-900">Mes Paiements</h1>
-              <p className="text-gray-600 font-medium">Suivez vos revenus et transactions</p>
-            </div>
-          </div>
+          <h1 className="text-3xl md:text-4xl lg:text-6xl font-black text-gray-900 mb-2 md:mb-4 tracking-tight">
+            Mes Paiements
+          </h1>
+          <p className="text-base md:text-lg lg:text-xl text-gray-600 font-medium max-w-2xl leading-relaxed">
+            Suivez vos revenus et transactions - Gérez vos finances avec style
+          </p>
         </div>
-        
-        <Button 
-          onClick={() => {
-            loadPayments();
-            loadStats();
-          }}
-          disabled={loading}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
-        >
-          <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
-          Actualiser
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <Button 
+            onClick={() => {
+              loadPayments();
+              loadStats();
+            }}
+            disabled={loading}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{loading ? 'Actualisation...' : 'Actualiser'}</span>
+          </Button>
+          <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 px-4 md:px-6 py-2 md:py-3 rounded-full text-sm md:text-base font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <div className="w-2 h-2 md:w-3 md:h-3 bg-white rounded-full mr-2 md:mr-3 animate-pulse"></div>
+            Système actif
+          </Badge>
+        </div>
       </div>
 
-      {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-600 font-semibold text-sm">Revenus Total</p>
-                <p className="text-2xl font-black text-green-900">{stats.totalRevenue.toLocaleString('fr-FR')} F</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-white" />
+      {/* Cartes de statistiques ultra-modernes */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+        {/* Revenus Total */}
+        <Card className="group bg-white/80 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-500 rounded-2xl md:rounded-3xl overflow-hidden hover:scale-105 hover:-translate-y-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 md:pb-6">
+            <CardTitle className="text-sm md:text-base font-bold text-gray-900">
+              Revenus Total
+            </CardTitle>
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg">
+              <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-2 md:mb-3">{stats.totalRevenue.toLocaleString('fr-FR')}</div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="flex items-center gap-1 md:gap-2 bg-green-100 px-2 md:px-3 py-1 md:py-2 rounded-full">
+                <span className="text-xs md:text-sm font-bold text-green-700">FCFA</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-600 font-semibold text-sm">Transactions</p>
-                <p className="text-3xl font-black text-blue-900">{stats.totalTransactions}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center">
-                <Activity className="h-6 w-6 text-white" />
+        {/* Transactions */}
+        <Card className="group bg-white/80 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-500 rounded-2xl md:rounded-3xl overflow-hidden hover:scale-105 hover:-translate-y-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 md:pb-6">
+            <CardTitle className="text-sm md:text-base font-bold text-gray-900">
+              Transactions
+            </CardTitle>
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg">
+              <Activity className="h-6 w-6 md:h-8 md:w-8 text-white" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-2 md:mb-3">{stats.totalTransactions}</div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="flex items-center gap-1 md:gap-2 bg-blue-100 px-2 md:px-3 py-1 md:py-2 rounded-full">
+                <span className="text-xs md:text-sm font-bold text-blue-700">Total traitées</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-600 font-semibold text-sm">En attente</p>
-                <p className="text-3xl font-black text-yellow-900">{stats.pendingTransactions}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center">
-                <Clock className="h-6 w-6 text-white" />
-              </div>
+        {/* En attente */}
+        <Card className="group bg-white/80 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-500 rounded-2xl md:rounded-3xl overflow-hidden hover:scale-105 hover:-translate-y-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 md:pb-6">
+            <CardTitle className="text-sm md:text-base font-bold text-gray-900">
+              En attente
+            </CardTitle>
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg">
+              <Clock className="h-6 w-6 md:h-8 md:w-8 text-white" />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-600 font-semibold text-sm">Panier moyen</p>
-                <p className="text-2xl font-black text-purple-900">{stats.averageTransaction.toLocaleString('fr-FR')} F</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-white" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-2 md:mb-3">{stats.pendingTransactions}</div>
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="flex items-center gap-1 md:gap-2 bg-yellow-100 px-2 md:px-3 py-1 md:py-2 rounded-full">
+                <span className="text-xs md:text-sm font-bold text-yellow-700">En cours</span>
               </div>
             </div>
           </CardContent>
@@ -303,10 +321,17 @@ function PaymentsPageInner() {
       </div>
 
       {/* Répartition par méthode de paiement */}
-      <Card className="bg-white border-gray-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-xl font-black text-gray-900">Répartition par méthode</CardTitle>
-          <CardDescription>Analyse des modes de paiement utilisés</CardDescription>
+      <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl rounded-2xl md:rounded-3xl overflow-hidden">
+        <CardHeader className="pb-4 md:pb-8">
+          <CardTitle className="text-gray-900 text-lg md:text-xl lg:text-2xl font-black flex items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg">
+              <CreditCard className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+            Répartition par méthode
+          </CardTitle>
+          <CardDescription className="text-gray-600 text-sm md:text-base lg:text-lg font-medium">
+            Analyse des modes de paiement utilisés par vos clients
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -335,7 +360,7 @@ function PaymentsPageInner() {
       </Card>
 
       {/* Filtres et recherche */}
-      <Card className="bg-white border-gray-200 shadow-sm">
+      <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl rounded-2xl md:rounded-3xl overflow-hidden">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
